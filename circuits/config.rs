@@ -21,6 +21,15 @@ impl TendermintConfig<CELESTIA_CHAIN_ID_SIZE_BYTES> for CelestiaConfig {
     const SKIP_MAX: usize = SKIP_MAX;
 }
 
+/// Neutron's chain config (localhost)
+pub const NEUTRON_CHAIN_ID_BYTES: &[u8] = b"test-1";
+pub const NEUTRON_CHAIN_ID_SIZE_BYTES: usize = NEUTRON_CHAIN_ID_BYTES.len();
+#[derive(Debug, Clone, PartialEq)]
+pub struct NeutronConfig;
+impl TendermintConfig<NEUTRON_CHAIN_ID_SIZE_BYTES> for NeutronConfig {
+    const CHAIN_ID_BYTES: &'static [u8] = NEUTRON_CHAIN_ID_BYTES;
+    const SKIP_MAX: usize = SKIP_MAX;
+}
 /// Mocha-4's chain config.
 pub const MOCHA_4_CHAIN_ID_BYTES: &[u8] = b"mocha-4";
 pub const MOCHA_4_CHAIN_ID_SIZE_BYTES: usize = MOCHA_4_CHAIN_ID_BYTES.len();

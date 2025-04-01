@@ -149,10 +149,14 @@ mod tests {
     use ethers::types::H256;
     use ethers::utils::hex;
     use plonky2x::backend::circuit::PublicInput;
-    use plonky2x::prelude::{DefaultBuilder, GateRegistry, HintRegistry};
+    use plonky2x::prelude::{
+        DefaultBuilder, DefaultParameters, GateRegistry, GoldilocksField, HintRegistry,
+    };
 
     use super::*;
-    use crate::config::{Mocha4Config, MOCHA_4_CHAIN_ID_SIZE_BYTES};
+    use crate::config::{
+        Mocha4Config, NeutronConfig, MOCHA_4_CHAIN_ID_SIZE_BYTES, NEUTRON_CHAIN_ID_SIZE_BYTES,
+    };
 
     #[test]
     #[cfg_attr(feature = "ci", ignore)]
@@ -254,7 +258,7 @@ mod tests {
     fn test_skip_small() {
         const MAX_VALIDATOR_SET_SIZE: usize = 4;
         let trusted_header: [u8; 32] =
-            hex::decode("A0123D5E4B8B8888A61F931EE2252D83568B97C223E0ECA9795B29B8BD8CBA2D")
+            hex::decode("8CD24B39796977592A37250D831063BDE1262D9BE19895BB04D98561C88EB64C")
                 .unwrap()
                 .try_into()
                 .unwrap();
@@ -293,5 +297,52 @@ mod tests {
         let trusted_height = 1260790u64;
         let target_height = 1261790u64;
         test_skip_template::<MAX_VALIDATOR_SET_SIZE>(trusted_header, trusted_height, target_height)
+    }
+
+    #[tokio::test]
+    async fn test_skip_neutron_local_rpc() {
+        const MAX_VALIDATOR_SET_SIZE: usize = 100;
+        let trusted_header: [u8; 32] =
+            hex::decode("49326EC3B929699FA99B2CE22105C15E1A5C3F5359E83C2BA50108AC4E9162C9")
+                .unwrap()
+                .try_into()
+                .unwrap();
+        let trusted_height = 1318u64;
+        let target_height = 1320u64;
+
+        /*let mut skip_fetcher =
+            InputDataFetcher::new(vec!["https://127.0.0.1:26657".to_string()], "neutron skip");
+        let skip_inputs = skip_fetcher.get_skip_inputs::<MAX_VALIDATOR_SET_SIZE, GoldilocksField>(
+            trusted_height,
+            H256::from_slice(trusted_header.as_slice()),
+            target_height,
+        );*/
+
+        env::set_var("RUST_LOG", "debug");
+        env_logger::try_init().unwrap_or_default();
+
+        let mut builder = DefaultBuilder::new();
+
+        log::debug!("Defining circuit");
+        SkipCircuit::<MAX_VALIDATOR_SET_SIZE, NEUTRON_CHAIN_ID_SIZE_BYTES, NeutronConfig>::define(
+            &mut builder,
+        );
+
+        log::debug!("Building circuit");
+        let circuit = builder.build();
+        log::debug!("Done building circuit");
+
+        let mut input = circuit.input();
+        input.evm_write::<U64Variable>(trusted_height);
+        input.evm_write::<Bytes32Variable>(H256::from_slice(trusted_header.as_slice()));
+        input.evm_write::<U64Variable>(target_height);
+
+        log::debug!("Generating proof");
+        let (proof, mut output) = circuit.prove(&input);
+        log::debug!("Done generating proof");
+
+        circuit.verify(&proof, &input, &output);
+        let target_header = output.evm_read::<Bytes32Variable>();
+        println!("target_header {:?}", target_header);
     }
 }

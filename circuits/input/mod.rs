@@ -99,7 +99,7 @@ impl InputDataFetcher {
         let mut mode;
         #[cfg(test)]
         {
-            mode = InputDataMode::Fixture;
+            mode = InputDataMode::Rpc;
         }
         #[cfg(not(test))]
         {

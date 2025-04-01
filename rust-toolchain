@@ -1,1 +1,3 @@
-nightly-2024-02-22
+[toolchain]
+channel = "nightly"
+components = ["llvm-tools", "rustc-dev"]

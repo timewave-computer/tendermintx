@@ -309,16 +309,19 @@ mod tests {
         let trusted_height = 28105590u64;
         let target_height = 28105595u64;
 
+        let input_data_fetcher = InputDataFetcher::default();
+        let signed_header = input_data_fetcher
+            .get_signed_header_from_number(target_height)
+            .await;
+        let expected_hash = signed_header.header.hash();
         env::set_var("RUST_LOG", "debug");
         env_logger::try_init().unwrap_or_default();
 
         let mut builder = DefaultBuilder::new();
-
         log::debug!("Defining circuit");
         SkipCircuit::<MAX_VALIDATOR_SET_SIZE, NEUTRON_CHAIN_ID_SIZE_BYTES, NeutronConfig>::define(
             &mut builder,
         );
-
         log::debug!("Building circuit");
         let circuit = builder.build();
         log::debug!("Done building circuit");
@@ -334,7 +337,9 @@ mod tests {
 
         circuit.verify(&proof, &input, &output);
         let target_header = output.evm_read::<Bytes32Variable>();
+        assert_eq!(target_header.as_bytes(), expected_hash.as_bytes());
         println!("target_header {:?}", target_header);
+        println!("verified app hash {:?}", signed_header.header.app_hash);
         // this is ready for integration with valence-zk-demo!
     }
 }

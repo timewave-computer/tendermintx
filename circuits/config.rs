@@ -22,7 +22,7 @@ impl TendermintConfig<CELESTIA_CHAIN_ID_SIZE_BYTES> for CelestiaConfig {
 }
 
 /// Neutron's chain config (localhost)
-pub const NEUTRON_CHAIN_ID_BYTES: &[u8] = b"test-1";
+pub const NEUTRON_CHAIN_ID_BYTES: &[u8] = b"pion-1";
 pub const NEUTRON_CHAIN_ID_SIZE_BYTES: usize = NEUTRON_CHAIN_ID_BYTES.len();
 #[derive(Debug, Clone, PartialEq)]
 pub struct NeutronConfig;

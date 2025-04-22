@@ -149,9 +149,8 @@ mod tests {
     use ethers::types::H256;
     use ethers::utils::hex;
     use plonky2x::backend::circuit::PublicInput;
-    use plonky2x::prelude::{
-        DefaultBuilder, DefaultParameters, GateRegistry, GoldilocksField, HintRegistry,
-    };
+    use plonky2x::prelude::{DefaultBuilder, GateRegistry, HintRegistry};
+    use subtle_encoding::base64;
 
     use super::*;
     use crate::config::{
@@ -300,23 +299,15 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_skip_neutron_local_rpc() {
+    async fn test_skip_pion_1() {
         const MAX_VALIDATOR_SET_SIZE: usize = 100;
         let trusted_header: [u8; 32] =
-            hex::decode("49326EC3B929699FA99B2CE22105C15E1A5C3F5359E83C2BA50108AC4E9162C9")
+            base64::decode("DPfJ549ThHrZeVaTZfoNe3a0v6sILSpBIQTxMzcMrcY=")
                 .unwrap()
                 .try_into()
                 .unwrap();
-        let trusted_height = 1318u64;
-        let target_height = 1320u64;
-
-        /*let mut skip_fetcher =
-            InputDataFetcher::new(vec!["https://127.0.0.1:26657".to_string()], "neutron skip");
-        let skip_inputs = skip_fetcher.get_skip_inputs::<MAX_VALIDATOR_SET_SIZE, GoldilocksField>(
-            trusted_height,
-            H256::from_slice(trusted_header.as_slice()),
-            target_height,
-        );*/
+        let trusted_height = 28105590u64;
+        let target_height = 28105595u64;
 
         env::set_var("RUST_LOG", "debug");
         env_logger::try_init().unwrap_or_default();
@@ -344,5 +335,6 @@ mod tests {
         circuit.verify(&proof, &input, &output);
         let target_header = output.evm_read::<Bytes32Variable>();
         println!("target_header {:?}", target_header);
+        // this is ready for integration with valence-zk-demo!
     }
 }
